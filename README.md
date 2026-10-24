@@ -16,6 +16,7 @@ Python 3.10 or newer is recommended. The memory and pair planner need no extra p
 4. Menu option 1 shows the animal count, tried/untried/total pairs, and the number of distinct pairs at each best-star score.
 5. Menu option 5 shows how many distinct pairs have each best-star score, then lets you choose one exact star score and how many matching pairs to display.
 6. Menu option 6 lets you select a current star score, choose a numbered pair from that group, and enter its corrected score.
+7. Menu option 7 asks for one animal name and shows the five recorded pairs involving it with the highest star scores.
 
 The menu is a local folder-based interface. It does not accept commands from this chat automatically. Add animals and record observed results. The system normalizes pair order, so `Cat + Dragon` and `Dragon + Cat` refer to the same pair. `untried` lists every pair of known animals with no recorded result. The planner does not suggest an animal combined with itself.
 
