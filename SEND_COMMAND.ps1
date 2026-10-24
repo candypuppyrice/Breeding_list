@@ -39,8 +39,9 @@ while ($true) {
     Write-Host '4. Show all pairs never tried'
     Write-Host '5. Count pairs by stars and view one star score'
     Write-Host '6. Edit a pair score by star group and pair number'
+    Write-Host '7. Show the top 5 pairs for one animal'
     Write-Host '0. Exit'
-    $choice = Read-Host 'Choose 0-6'
+    $choice = Read-Host 'Choose 0-7'
     if ($null -eq $choice) { break }
     $choice = $choice.Trim()
     if ($choice -eq '0') { break }
@@ -53,16 +54,21 @@ while ($true) {
             '4' { $command = @{ action = 'untried' } }
             '5' { $command = @{ action = 'top' } }
             '6' { $command = @{ action = 'top' } }
+            '7' {
+                $animalToSearch = (Read-Host 'Animal name').Trim()
+                if (-not $animalToSearch) { throw 'Animal name cannot be empty.' }
+                $command = @{ action = 'top'; limit = 5000 }
+            }
             '3' {
                 $animal = (Read-Host 'Animal name').Trim()
                 if (-not $animal) { throw 'Animal name cannot be empty.' }
                 $command = @{ action = 'add'; animal = $animal }
             }
-            default { throw 'Choose a number from 0 to 6.' }
+            default { throw 'Choose a number from 0 to 7.' }
         }
 
         if ($null -ne $command) {
-            if ($choice -eq '1' -or $choice -eq '2' -or $choice -eq '4' -or $choice -eq '5' -or $choice -eq '6') { $response = Invoke-AnimalCommand $command -Quiet }
+            if ($choice -eq '1' -or $choice -eq '2' -or $choice -eq '4' -or $choice -eq '5' -or $choice -eq '6' -or $choice -eq '7') { $response = Invoke-AnimalCommand $command -Quiet }
             else { $response = Invoke-AnimalCommand $command }
             if ($choice -eq '1' -and $response.ok) {
                 Write-Host "`nAnimals: $($response.animal_count)"
@@ -145,6 +151,24 @@ while ($true) {
                 $edit = Invoke-AnimalCommand @{ action = 'edit_pair_score'; animal_a = $selectedPair.animal_a; animal_b = $selectedPair.animal_b; current_stars = $currentStars; new_stars = $newStars } -Quiet
                 $bestScoreText = ([double]$edit.best_stars).ToString('0.################', [Globalization.CultureInfo]::InvariantCulture)
                 Write-Host "Updated: $($edit.animal_a) + $($edit.animal_b); best score is now $bestScoreText stars." -ForegroundColor Green
+            }
+            if ($choice -eq '7' -and $response.ok) {
+                $rankedForAnimal = @($response.pairs | Where-Object {
+                    $_.animal_a -ieq $animalToSearch -or $_.animal_b -ieq $animalToSearch
+                } | Select-Object -First 5)
+                Write-Host ''
+                Write-Host "Top 5 pairs for $animalToSearch" -ForegroundColor Cyan
+                if ($rankedForAnimal.Count -eq 0) {
+                    Write-Host 'No recorded pairs found for this animal.' -ForegroundColor Yellow
+                } else {
+                    for ($i = 0; $i -lt $rankedForAnimal.Count; $i++) {
+                        $pair = $rankedForAnimal[$i]
+                        if ($pair.animal_a -ieq $animalToSearch) { $otherAnimal = $pair.animal_b }
+                        else { $otherAnimal = $pair.animal_a }
+                        $scoreText = ([double]$pair.stars).ToString('0.##', [Globalization.CultureInfo]::InvariantCulture)
+                        Write-Host ("  {0}. {1} + {2} - {3} stars" -f ($i + 1), $animalToSearch, $otherAnimal, $scoreText)
+                    }
+                }
             }
             if ($choice -eq '2' -and $response.pair) {
                 $animalA = [string]$response.pair[0]
